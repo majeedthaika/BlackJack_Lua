@@ -15,7 +15,7 @@ local background; -- Poker table background
 local roundedRect; -- Status field rectangle
 local t; -- Status text
 local dealbutton; -- Deal action button
-local stickbutton; -- Stick action button
+local standbutton; -- Stand action button
 local hitbutton; -- Hit action button
 local doublebutton; -- Double action button
 local suits = {"h","d","c","s"}; -- hearts = h,diamonds =d,clubs =c,spades=s
@@ -26,14 +26,14 @@ local allCards = {} -- a table to hold all cards
 local betAmount = 0; -- how much the player is betting Total
 local money; -- how much money the player has
 local blackJack = false; -- whether player or dealer has blackjack
-local firstDealerCard = ""; -- a reference to the first card the dealer is dealt
-local playerYields = false; -- whether or not the player has stood on his hand
-local winner=""; -- who the winner of the round is
 local bet=0; -- how much the player is adding to betAmount variable
 local bankText; -- shows the players money
 local betText; -- shows how much the player is betting
-local playerSum; -- shows the players money
-local dealerSum; -- shows how much the player is betting
+local playerSum; -- shows the player's points
+local dealerSum; -- shows the dealer's points
+local moved=false; -- if current button has been moved, set to true
+local lastPlayerIdx; -- to calculate offset for placing player's card
+local lastDealerIdx; -- to calculate offset for placing dealer's card
 
 --------------------------------------------
 
@@ -68,13 +68,13 @@ end
 
 function setupButtons()
 	-- display action buttons
-	stickbutton = widget.newButton{
+	standbutton = widget.newButton{
 		defaultFile = "buttonBlueSmall.png",
 		overFile = "buttonBlueSmallOver.png",
-		label = "Stick",
+		label = "Stand",
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
 	}
-	stickbutton.x, stickbutton.y = display.contentCenterX-180, display.contentCenterY+120
+	standbutton.x, standbutton.y = display.contentCenterX-180, display.contentCenterY+120
 
 	hitbutton = widget.newButton{
 		defaultFile = "buttonBlueSmall.png",
@@ -121,7 +121,7 @@ function setupTextFields()
     bankText:setTextColor(0,0,0)
 
 	-- display text status
-	t = display.newText( "Let's Play BlackJack!", display.contentCenterX-25, 80, native.systemFont, 18 )
+	t = display.newText( "Started new Squikly BlackJack game!", display.contentCenterX-25, 80, native.systemFont, 18 )
 	t:setTextColor( 1, 1, 1 )
 
 	-- display player's card sum
@@ -153,7 +153,7 @@ end
 
 function addListeners()
 	-- for all button touch events
-	stickbutton:addEventListener('touch',stick)
+	standbutton:addEventListener('touch',stand)
 	hitbutton:addEventListener('touch',hit)
 	doublebutton:addEventListener('touch',double)
 end
@@ -181,20 +181,71 @@ function dealInitial()
 	local dealerback2 = display.newImageRect("back.png", 90, 90 )
 	dealerback2.x, dealerback2.y = display.contentCenterX+90, display.contentCenterY
 
-	playerSum.text = "Player: "..getHandValue(playerHand)
-	dealerSum.text = "Dealer: "..getHandValue(dealerHand)
+	local playerPts = getHandValue(playerHand)
+
+	playerSum.text = "Player: "..playerPts.." pts"
+	dealerSum.text = "Dealer: "..getHandValue(dealerHand).." pts"
+
+	if (string.sub(playerPts,1,2) == "21") then
+		t.text = "BlackJack!"
+		-- resolveDealer()
+	end
+
+	-- Offset of where to place cards next
+	lastPlayerIdx = -120
+	lastDealerIdx = 30
 end
 
-function stick()
-	
+function stand(event)
+	if ( event.phase == "began" ) then
+        t.text = "Happy with your points?"
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        t.text = ""
+        moved = true
+    else
+    	if ( moved == true ) then
+			t.text = "Stand cancelled"
+    	else
+    		t.text = "Stand done"
+    	end
+    end
+    return true
 end
 
-function hit()
-	
+function hit(event)
+	if ( event.phase == "began" ) then
+        t.text = "Hit me baby one more time!"
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        t.text = ""
+        moved = true
+    else
+    	if ( moved == true ) then
+			t.text = "Hit cancelled"
+    	else
+    		t.text = "Hit done"
+    		newCardHit()
+    	end
+    end
+    return true
 end
 
-function double()
-	
+function double(event)
+	if ( event.phase == "began" ) then
+        t.text = "Double or nothing?"
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        t.text = ""
+        moved = true
+    else
+    	if ( moved == true ) then
+			t.text = "Double cancelled"
+    	else
+    		t.text = "Double done"
+    	end
+    end
+    return true
 end
 
 function createDeck()
@@ -241,9 +292,22 @@ function getHandValue(theHand)
         end
     end
     if (hasAceInHand and handValue <= 11)then
-    	return handValue.." or "..handValue + 10;
+    	return (handValue+10).." or "..handValue;
     end
     return handValue;
+end
+
+function newCardHit()
+	local randIndex = math.random(#deck)
+	local playerCard = display.newImageRect(deck[randIndex]..".png", 90, 90 )
+		playerCard.x, playerCard.y = display.contentCenterX+lastPlayerIdx, display.contentCenterY
+	if (lastPlayerIdx < -60) then
+		lastPlayerIdx = lastPlayerIdx+30
+	end
+	table.insert(playerHand,deck[randIndex])
+	table.remove(deck,randIndex);
+
+	playerSum.text = "Player: "..getHandValue(playerHand).." pts"
 end
 
 function buttonController()
@@ -267,7 +331,7 @@ function scene:create( event )
 	sceneGroup:insert( background )
 	sceneGroup:insert( roundedRect )
 	sceneGroup:insert( hitbutton )
-	sceneGroup:insert( stickbutton )
+	sceneGroup:insert( standbutton )
 	sceneGroup:insert( doublebutton )
 	sceneGroup:insert( betText )
 	sceneGroup:insert( bankText )
