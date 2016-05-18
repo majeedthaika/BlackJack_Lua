@@ -10,30 +10,108 @@ local composer = require( "composer" )
 local scene = composer.newScene()
 
 --------------------------------------------
+-- Local Variables
+local background;
+local roundedRect;
+local t;
+local stickbutton;
+local hitbutton;
+local doublebutton; 
+local suits = {"h","d","c","s"}; -- hearts = h,diamonds =d,clubs =c,spades=s
+local deck; -- The deck of Cards
+local playerHand = {}; -- a table to hold the players cards
+local dealerHand = {}; -- a table to hold the dealers cards
+local allCards = {} -- a table to hold all cards
+local betAmount = 0; -- how much the player is betting Total
+local money; -- how much money the player has
+local blackJack = false; -- whether player or dealer has blackjack
+local firstDealerCard = ""; -- a reference to the first card the dealer is dealt
+local playerYields = false; -- whether or not the player has stood on his hand
+local winner=""; -- who the winner of the round is
+local bet=0; -- how much the player is adding to betAmount variable
+local bankText; -- shows the players money
+local betText; -- shows how much the player is betting
 
--- forward declarations and other locals
-local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth*0.5
+--------------------------------------------
 
--- display text status
-local t = display.newText( "Let's Play BlackJack!", 0, 0, native.systemFont, 18 )
-t.x, t.y = display.contentCenterX, 70
+-- NewGame Setup functions
+
+function Setup()
+	setupButtons()
+	setupTextFields()
+	addListeners()
+	createDeck()
+end
+
+function setupButtons()
+	-- display action buttons
+	stickbutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Stick",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	stickbutton.x, stickbutton.y = display.contentCenterX-150, display.contentCenterY+120
+
+	hitbutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Hit",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	hitbutton.x, hitbutton.y = display.contentCenterX, display.contentCenterY+120
+
+	doublebutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Double",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	doublebutton.x, doublebutton.y = display.contentCenterX+150, display.contentCenterY+120
+end
+
+function setupTextFields()
+	-- display text status
+	t = display.newText( "Let's Play BlackJack!", 0, 0, native.systemFont, 18 )
+	t.x, t.y = display.contentCenterX, 70
+	t:setFillColor( 1, 1, 1 )
+end
+
+function addListeners()
+	stickbutton:addEventListener('touch',stick)
+	hitbutton:addEventListener('touch',hit)
+	doublebutton:addEventListener('touch',double)
+end
+
+function stick()
+	
+end
+
+function hit()
+	
+end
+
+function double()
+	
+end
+
+function createDeck()
+	deck = {};
+	for i=1,4 do
+		for j=1,13 do
+			local tempCard = suits[i]..j;
+			table.insert(deck,tempCard);
+		end
+	end
+end
+
+Setup()
+--------------------------------------------
 
 -- make a card
-local card = display.newImageRect( "jack_of_spades.png", 90, 90 )
+local card = display.newImageRect( "Js.png", 90, 90 )
 card.x, card.y = display.contentCenterX, display.contentCenterY
-card.rotation = 15
 card.isVisible = false
-
--- These are the functions triggered by the buttons
-local button1Press = function( event )
-	t.text = "Displayed Card"
-	card.isVisible = true
-end
-
-local button1Release = function( event )
-	t.text = "Hid Card"
-	card.isVisible = false
-end
 
 function scene:create( event )
 
@@ -44,53 +122,24 @@ function scene:create( event )
 
 	local sceneGroup = self.view
 
-	-- create a grey rectangle as the backdrop
-	local background = display.newImageRect( "Table_Green_banner.jpg", display.contentWidth, display.contentHeight )
+	-- create background
+	background = display.newImageRect( "Table_Green_banner.jpg", display.contentWidth, display.contentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
 	background.x, background.y = 0, 0
 
 	-- display status
-	local roundedRect = display.newRoundedRect( 10, 50, 300, 40, 8 )
+	roundedRect = display.newRoundedRect( 10, 50, 300, 40, 8 )
 	roundedRect.x, roundedRect.y = display.contentCenterX, 70 	-- simulate TopLeft alignment
 	roundedRect:setFillColor( 0/255, 0/255, 0/255, 170/255 )
 
-	local stickbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Stick",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-		onPress = button1Press,
-		onRelease = button1Release,
-	}
-	stickbutton.x, stickbutton.y = display.contentCenterX-150, display.contentCenterY+120
-
-	local hitbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Hit",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-		onPress = button1Press,
-		onRelease = button1Release,
-	}
-	hitbutton.x, hitbutton.y = display.contentCenterX, display.contentCenterY+120
-
-	local doublebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Double",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-		onPress = button1Press,
-		onRelease = button1Release,
-	}
-	doublebutton.x, doublebutton.y = display.contentCenterX+150, display.contentCenterY+120
-
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
+	sceneGroup:insert( roundedRect )
+	sceneGroup:insert( t )
 	sceneGroup:insert( hitbutton )
 	sceneGroup:insert( stickbutton )
 	sceneGroup:insert( doublebutton )
-	sceneGroup:insert( card )
 end
 
 
