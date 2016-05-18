@@ -18,7 +18,7 @@ local playBtn
 -- 'onRelease' event listener for playBtn
 local function onPlayBtnRelease()
 	
-	-- go to level1.lua scene
+	-- go to bjtable.lua scene
 	composer.gotoScene( "bjtable", "fade", 500 )
 	
 	return true	-- indicates successful touch

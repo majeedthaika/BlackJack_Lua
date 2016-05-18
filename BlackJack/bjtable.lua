@@ -11,12 +11,13 @@ local scene = composer.newScene()
 
 --------------------------------------------
 -- Local Variables
-local background;
-local roundedRect;
-local t;
-local stickbutton;
-local hitbutton;
-local doublebutton; 
+local background; -- Poker table background
+local roundedRect; -- Status field rectangle
+local t; -- Status text
+local dealbutton; -- Deal action button
+local stickbutton; -- Stick action button
+local hitbutton; -- Hit action button
+local doublebutton; -- Double action button
 local suits = {"h","d","c","s"}; -- hearts = h,diamonds =d,clubs =c,spades=s
 local deck; -- The deck of Cards
 local playerHand = {}; -- a table to hold the players cards
@@ -37,10 +38,30 @@ local betText; -- shows how much the player is betting
 -- NewGame Setup functions
 
 function Setup()
+	bankText = 10000
+	showBackground()
+	showOtherObjects()
 	setupButtons()
-	setupTextFields()
 	addListeners()
+	math.randomseed(os.time());
 	createDeck()
+	setupTextFields()
+	startGame()
+end
+
+function showBackground()
+	-- create background
+	background = display.newImageRect( "Table_Green_banner.jpg", display.contentWidth, display.contentHeight )
+	background.anchorX = 0
+	background.anchorY = 0
+	background.x, background.y = 0, 0
+end
+
+function showOtherObjects()
+	-- display status
+	roundedRect = display.newRoundedRect( 10, 50, 300, 40, 8 )
+	roundedRect.x, roundedRect.y = display.contentCenterX-25, 80 	-- simulate TopLeft alignment
+	roundedRect:setFillColor( 0/255, 0/255, 0/255, 170/255 )
 end
 
 function setupButtons()
@@ -71,16 +92,63 @@ function setupButtons()
 end
 
 function setupTextFields()
+	-- display player's balance
+	local options = {
+	    text = "Bet Amount: $1000", -- supports up to 11 digits   
+	    x = 100,
+	    y = 30,
+	    width = 150,
+	    font = native.systemFontBold,   
+	    fontSize = 18,
+	    align = "left"  --new alignment parameter
+	}
+	betText = display.newText(options);
+    betText:setTextColor(0,0,0)
+
+	-- display player's balance
+	local options = {
+	    text = "Balance: $999999", -- supports up to 11 digits      
+	    x = display.contentCenterX+20,
+	    y = 30,
+	    width = 150,
+	    font = native.systemFontBold,   
+	    fontSize = 18,
+	    align = "left"  --new alignment parameter
+	}
+	bankText = display.newText(options);
+    bankText:setTextColor(0,0,0)
+
 	-- display text status
-	t = display.newText( "Let's Play BlackJack!", 0, 0, native.systemFont, 18 )
-	t.x, t.y = display.contentCenterX, 70
-	t:setFillColor( 1, 1, 1 )
+	t = display.newText( "Let's Play BlackJack!", display.contentCenterX-25, 80, native.systemFont, 18 )
+	t:setTextColor( 1, 1, 1 )
 end
 
 function addListeners()
 	stickbutton:addEventListener('touch',stick)
 	hitbutton:addEventListener('touch',hit)
 	doublebutton:addEventListener('touch',double)
+end
+
+function startGame()
+	local randIndex = math.random(#deck)
+	print(deck[randIndex]..".png")
+	local playerCard1 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
+	playerCard1.x, playerCard1.y = display.contentCenterX-150, display.contentCenterY
+	table.remove(deck,randIndex);
+	
+
+	local randIndex = math.random(#deck)
+	print(deck[randIndex]..".png")
+	local playerCard2 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
+	playerCard2.x, playerCard2.y = display.contentCenterX-125, display.contentCenterY
+	table.remove(deck,randIndex);
+
+	local randIndex = math.random(#deck)
+	print(deck[randIndex]..".png")
+	local dealercard1 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
+	dealercard1.x, dealercard1.y = display.contentCenterX+70, display.contentCenterY
+	table.remove(deck,randIndex);
+
 end
 
 function stick()
@@ -99,19 +167,45 @@ function createDeck()
 	deck = {};
 	for i=1,4 do
 		for j=1,13 do
-			local tempCard = suits[i]..j;
+			local tempCard
+			if j == 1 then
+				tempCard = "A"..suits[i];
+			elseif j == 11 then
+				tempCard = "J"..suits[i];
+			elseif j == 12 then
+				tempCard = "Q"..suits[i];
+			elseif j == 13 then
+				tempCard = "K"..suits[i];
+			else
+				tempCard = j..suits[i];
+			end
 			table.insert(deck,tempCard);
 		end
 	end
 end
 
-Setup()
---------------------------------------------
+-- Calculate current value of the player's/dealer's hand
+function getHandValue(theHand)
+	local handValue = 0;
+	local hasAceInHand=false;
+    for i=1,#theHand do
+    	local cardsValue =  tonumber(string.sub(theHand[i],2,3));
+        if (cardsValue > 10) then
+        	cardsValue = 10;
+        end
+        
+        handValue = handValue + cardsValue;
+        if (cardsValue == 1) then
+            hasAceInHand = true;
+        end
+    end
+    if (hasAceInHand and handValue <= 11)then
+    	handValue = handValue + 10;
+    end
+    return handValue;
+end
 
--- make a card
-local card = display.newImageRect( "Js.png", 90, 90 )
-card.x, card.y = display.contentCenterX, display.contentCenterY
-card.isVisible = false
+--------------------------------------------
 
 function scene:create( event )
 
@@ -121,25 +215,17 @@ function scene:create( event )
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
 
 	local sceneGroup = self.view
-
-	-- create background
-	background = display.newImageRect( "Table_Green_banner.jpg", display.contentWidth, display.contentHeight )
-	background.anchorX = 0
-	background.anchorY = 0
-	background.x, background.y = 0, 0
-
-	-- display status
-	roundedRect = display.newRoundedRect( 10, 50, 300, 40, 8 )
-	roundedRect.x, roundedRect.y = display.contentCenterX, 70 	-- simulate TopLeft alignment
-	roundedRect:setFillColor( 0/255, 0/255, 0/255, 170/255 )
+	Setup()
 
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
 	sceneGroup:insert( roundedRect )
-	sceneGroup:insert( t )
 	sceneGroup:insert( hitbutton )
 	sceneGroup:insert( stickbutton )
 	sceneGroup:insert( doublebutton )
+	sceneGroup:insert( betText )
+	sceneGroup:insert( bankText )
+	sceneGroup:insert( t )
 end
 
 
