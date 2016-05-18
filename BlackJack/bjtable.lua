@@ -32,6 +32,8 @@ local winner=""; -- who the winner of the round is
 local bet=0; -- how much the player is adding to betAmount variable
 local bankText; -- shows the players money
 local betText; -- shows how much the player is betting
+local playerSum; -- shows the players money
+local dealerSum; -- shows how much the player is betting
 
 --------------------------------------------
 
@@ -46,7 +48,7 @@ function Setup()
 	math.randomseed(os.time());
 	createDeck()
 	setupTextFields()
-	startGame()
+	dealInitial()
 end
 
 function showBackground()
@@ -59,7 +61,7 @@ end
 
 function showOtherObjects()
 	-- display status
-	roundedRect = display.newRoundedRect( 10, 50, 300, 40, 8 )
+	roundedRect = display.newRoundedRect( 10, 50, 400, 40, 8 )
 	roundedRect.x, roundedRect.y = display.contentCenterX-25, 80 	-- simulate TopLeft alignment
 	roundedRect:setFillColor( 0/255, 0/255, 0/255, 170/255 )
 end
@@ -72,7 +74,7 @@ function setupButtons()
 		label = "Stick",
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
 	}
-	stickbutton.x, stickbutton.y = display.contentCenterX-150, display.contentCenterY+120
+	stickbutton.x, stickbutton.y = display.contentCenterX-180, display.contentCenterY+120
 
 	hitbutton = widget.newButton{
 		defaultFile = "buttonBlueSmall.png",
@@ -80,7 +82,7 @@ function setupButtons()
 		label = "Hit",
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
 	}
-	hitbutton.x, hitbutton.y = display.contentCenterX, display.contentCenterY+120
+	hitbutton.x, hitbutton.y = display.contentCenterX-30, display.contentCenterY+120
 
 	doublebutton = widget.newButton{
 		defaultFile = "buttonBlueSmall.png",
@@ -88,11 +90,11 @@ function setupButtons()
 		label = "Double",
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
 	}
-	doublebutton.x, doublebutton.y = display.contentCenterX+150, display.contentCenterY+120
+	doublebutton.x, doublebutton.y = display.contentCenterX+120, display.contentCenterY+120
 end
 
 function setupTextFields()
-	-- display player's balance
+	-- display player's bet
 	local options = {
 	    text = "Bet Amount: $1000", -- supports up to 11 digits   
 	    x = 100,
@@ -121,34 +123,66 @@ function setupTextFields()
 	-- display text status
 	t = display.newText( "Let's Play BlackJack!", display.contentCenterX-25, 80, native.systemFont, 18 )
 	t:setTextColor( 1, 1, 1 )
+
+	-- display player's card sum
+	local options = {
+	    text = "Player: ",
+	    x = display.contentCenterX-150,
+	    y = display.contentCenterY+70,
+	    width = 150,
+	    font = native.systemFontBold,   
+	    fontSize = 18,
+	    align = "left"  --new alignment parameter
+	}
+	playerSum = display.newText(options);
+    playerSum:setTextColor(1,1,1)
+
+    -- display dealer's card sum
+	local options = {
+	    text = "Dealer: ", 
+	    x = display.contentCenterX+90,
+	    y = display.contentCenterY+70,
+	    width = 150,
+	    font = native.systemFontBold,   
+	    fontSize = 18,
+	    align = "left"  --new alignment parameter
+	}
+	dealerSum = display.newText(options);
+    dealerSum:setTextColor(1,1,1)
 end
 
 function addListeners()
+	-- for all button touch events
 	stickbutton:addEventListener('touch',stick)
 	hitbutton:addEventListener('touch',hit)
 	doublebutton:addEventListener('touch',double)
 end
 
-function startGame()
+function dealInitial()
+	-- Deal out starting player+dealer card
 	local randIndex = math.random(#deck)
-	print(deck[randIndex]..".png")
 	local playerCard1 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-	playerCard1.x, playerCard1.y = display.contentCenterX-150, display.contentCenterY
+	playerCard1.x, playerCard1.y = display.contentCenterX-180, display.contentCenterY
+	table.insert(playerHand,deck[randIndex])
 	table.remove(deck,randIndex);
 	
-
-	local randIndex = math.random(#deck)
-	print(deck[randIndex]..".png")
+	randIndex = math.random(#deck)
 	local playerCard2 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-	playerCard2.x, playerCard2.y = display.contentCenterX-125, display.contentCenterY
+	playerCard2.x, playerCard2.y = display.contentCenterX-150, display.contentCenterY
+	table.insert(playerHand,deck[randIndex])
 	table.remove(deck,randIndex);
 
-	local randIndex = math.random(#deck)
-	print(deck[randIndex]..".png")
+	randIndex = math.random(#deck)
 	local dealercard1 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-	dealercard1.x, dealercard1.y = display.contentCenterX+70, display.contentCenterY
+	dealercard1.x, dealercard1.y = display.contentCenterX+60, display.contentCenterY
+	table.insert(dealerHand,deck[randIndex])
 	table.remove(deck,randIndex);
 
+	local dealerback2 = display.newImageRect("back.png", 90, 90 )
+	dealerback2.x, dealerback2.y = display.contentCenterX+90, display.contentCenterY
+
+	playerSum.text = "Player: "..getHandValue(playerHand)
+	dealerSum.text = "Dealer: "..getHandValue(dealerHand)
 end
 
 function stick()
@@ -164,6 +198,7 @@ function double()
 end
 
 function createDeck()
+	--Create deck + name it according to card images
 	deck = {};
 	for i=1,4 do
 		for j=1,13 do
@@ -186,25 +221,34 @@ function createDeck()
 	end
 end
 
--- Calculate current value of the player's/dealer's hand
 function getHandValue(theHand)
+	-- Calculate current value of the player's/dealer's hand
 	local handValue = 0;
 	local hasAceInHand=false;
     for i=1,#theHand do
-    	local cardsValue =  tonumber(string.sub(theHand[i],2,3));
-        if (cardsValue > 10) then
-        	cardsValue = 10;
-        end
-        
+    	local cardsValue = string.sub(theHand[i],1,1);
+        if (cardsValue == "A") then
+        	cardsValue = 1;
+        	hasAceInHand = true;
+        elseif cardsValue > "9" then
+        	cardsValue = 10
+		else
+			cardsValue = tonumber(cardsValue)
+		end
         handValue = handValue + cardsValue;
         if (cardsValue == 1) then
             hasAceInHand = true;
         end
     end
     if (hasAceInHand and handValue <= 11)then
-    	handValue = handValue + 10;
+    	return handValue.." or "..handValue + 10;
     end
     return handValue;
+end
+
+function buttonController()
+	-- Calculates if buttons need to be hidden/shown
+
 end
 
 --------------------------------------------
