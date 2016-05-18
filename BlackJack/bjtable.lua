@@ -170,6 +170,8 @@ function createDeck()
 			local tempCard
 			if j == 1 then
 				tempCard = "A"..suits[i];
+			elseif j == 10 then
+				tempCard = "T"..suits[i];
 			elseif j == 11 then
 				tempCard = "J"..suits[i];
 			elseif j == 12 then
