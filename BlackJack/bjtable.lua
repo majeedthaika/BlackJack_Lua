@@ -1,20 +1,39 @@
 -----------------------------------------------------------------------------------------
 --
--- level1.lua
+-- bjtable.lua
 --
 -----------------------------------------------------------------------------------------
+-- Require the widget library
+local widget = require( "widget" )
 
 local composer = require( "composer" )
 local scene = composer.newScene()
-
--- include Corona's "physics" library
-local physics = require "physics"
-physics.start(); physics.pause()
 
 --------------------------------------------
 
 -- forward declarations and other locals
 local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth*0.5
+
+-- display text status
+local t = display.newText( "Let's Play BlackJack!", 0, 0, native.systemFont, 18 )
+t.x, t.y = display.contentCenterX, 70
+
+-- make a card
+local card = display.newImageRect( "jack_of_spades.png", 90, 90 )
+card.x, card.y = display.contentCenterX, display.contentCenterY
+card.rotation = 15
+card.isVisible = false
+
+-- These are the functions triggered by the buttons
+local button1Press = function( event )
+	t.text = "Displayed Card"
+	card.isVisible = true
+end
+
+local button1Release = function( event )
+	t.text = "Hid Card"
+	card.isVisible = false
+end
 
 function scene:create( event )
 
@@ -26,42 +45,52 @@ function scene:create( event )
 	local sceneGroup = self.view
 
 	-- create a grey rectangle as the backdrop
-	local background = display.newRect( 0, 0, screenW, screenH )
+	local background = display.newImageRect( "Table_Green_banner.jpg", display.contentWidth, display.contentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
-	background:setFillColor( .5 )
+	background.x, background.y = 0, 0
 
 	-- display status
 	local roundedRect = display.newRoundedRect( 10, 50, 300, 40, 8 )
 	roundedRect.x, roundedRect.y = display.contentCenterX, 70 	-- simulate TopLeft alignment
 	roundedRect:setFillColor( 0/255, 0/255, 0/255, 170/255 )
 
-	-- display text status
-	local t = display.newText( "Waiting for button event...", 0, 0, native.systemFont, 18 )
-	t.x, t.y = display.contentCenterX, 70
-	
-	-- make a crate (off-screen), position it, and rotate slightly
-	local crate = display.newImageRect( "jack_of_clubs.png", 90, 90 )
-	crate.x, crate.y = 160, -100
-	crate.rotation = 15
-	
-	-- add physics to the crate
-	physics.addBody( crate, { density=1.0, friction=0.3, bounce=0.3 } )
-	
-	-- create a grass object and add physics (with custom shape)
-	local grass = display.newImageRect( "grass.png", screenW, 82 )
-	grass.anchorX = 0
-	grass.anchorY = 1
-	grass.x, grass.y = 0, display.contentHeight
-	
-	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
-	local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
-	physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
-	
+	local stickbutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Stick",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		onPress = button1Press,
+		onRelease = button1Release,
+	}
+	stickbutton.x, stickbutton.y = display.contentCenterX-150, display.contentCenterY+120
+
+	local hitbutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Hit",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		onPress = button1Press,
+		onRelease = button1Release,
+	}
+	hitbutton.x, hitbutton.y = display.contentCenterX, display.contentCenterY+120
+
+	local doublebutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Double",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		onPress = button1Press,
+		onRelease = button1Release,
+	}
+	doublebutton.x, doublebutton.y = display.contentCenterX+150, display.contentCenterY+120
+
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
-	sceneGroup:insert( grass)
-	sceneGroup:insert( crate )
+	sceneGroup:insert( hitbutton )
+	sceneGroup:insert( stickbutton )
+	sceneGroup:insert( doublebutton )
+	sceneGroup:insert( card )
 end
 
 
@@ -71,12 +100,12 @@ function scene:show( event )
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
+
 	elseif phase == "did" then
 		-- Called when the scene is now on screen
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
-		physics.start()
 	end
 end
 
@@ -90,7 +119,6 @@ function scene:hide( event )
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
-		physics.stop()
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
 	end	
@@ -103,10 +131,6 @@ function scene:destroy( event )
 	-- 
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
-	local sceneGroup = self.view
-	
-	package.loaded[physics] = nil
-	physics = nil
 end
 
 ---------------------------------------------------------------------------------
