@@ -210,12 +210,12 @@ function dealInitial()
 	playerSum.text = "Player: "..getHandValue(playerHand).." pts"
 	dealerSum.text = "Dealer: "..getHandValue(dealerHand).." pts"
 
-	-- Checks for BlackJack
-	checkPoints()
-
 	-- Offset of where to place cards next
 	lastPlayerIdx = -120
 	lastDealerIdx = 90
+
+	-- Checks for BlackJack
+	buttonController()
 end
 
 function stand(event)
@@ -226,10 +226,9 @@ function stand(event)
         t.text = ""
         moved = true
     else
-    	if ( moved == true ) then
-			t.text = "Stand cancelled"
-    	else
+    	if ( moved == false ) then
     		t.text = "Stand done"
+			playerDone()
     	end
     end
     return true
@@ -243,9 +242,7 @@ function hit(event)
         t.text = ""
         moved = true
     else
-    	if ( moved == true ) then
-			t.text = "Hit cancelled"
-    	else
+    	if ( moved == false ) then
     		t.text = "Hit done"
     		newCardHit()
     	end
@@ -261,9 +258,7 @@ function double(event)
         t.text = ""
         moved = true
     else
-    	if ( moved == true ) then
-			t.text = "Double cancelled"
-    	else
+    	if ( moved == false ) then
     		t.text = "Double done"
     	end
     end
@@ -278,9 +273,7 @@ function continue(event)
         t.text = ""
         moved = true
     else
-    	if ( moved == true ) then
-			t.text = "Continue cancelled"
-    	else
+    	if ( moved == false ) then
     		t.text = "Continue done"
 			resolveDealer()
     	end
@@ -370,31 +363,31 @@ function newCardHit()
 	buttonController()
 end
 
-function checkPoints()
+function checkPoints(theHand)
 	-- Checks for BlackJack or Busted
-	local playerPts = getHandValue(playerHand)
-	local upperbound = tonumber(string.sub(playerPts,1,2))
+	local points = getHandValue(theHand)
+	local upperbound = tonumber(string.sub(points,1,2))
 
 	if (upperbound == 21) then
-		t.text = "BlackJack!"
 		return "blackjack"
 	elseif (upperbound > 21) then
-		t.text = "Busted!"
 		return "busted"
 	else
 		return "normal"
 	end
 end
 
-function resolveDealer()
-	randIndex = math.random(#deck)
-	local dealercard = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-	dealercard.x, dealercard.y = display.contentCenterX+60, display.contentCenterY
-	table.insert(dealerHand,deck[randIndex])
-	table.remove(deck,randIndex);
+function winner()
+	-- Sees who is the winner based on current points
+	local dealerPts = tonumber(string.sub(getHandValue(dealerHand),1,2))
+	local playerPts = tonumber(string.sub(getHandValue(playerHand),1,2))
 
-	while (tonumber(string.sub(getHandValue(dealerHand),1,2))<17) do
-
+	if (dealerPts == playerPts) then
+		return "draw"
+	elseif (dealerPts > playerPts) then
+		return "dealer"
+	else
+		return "player"
 	end
 end
 
@@ -405,13 +398,62 @@ function playerDone()
 	continuebutton.isVisible = true
 end
 
+function playerWin()
+	t.text = "Player Win"
+	continuebutton.isVisible = false
+end
+
+function dealerWin()
+	t.text = "Dealer Win"
+	continuebutton.isVisible = false
+end
+
+function roundDraw()
+	t.text = "Draw"
+	continuebutton.isVisible = false
+end
+
+function resolveDealer()
+	local resolved = false
+	while ( resolved == false ) do
+		local upperbound = tonumber(string.sub(getHandValue(dealerHand),1,2))
+		if (upperbound > 21) then
+			playerWin()
+			resolved = true
+		elseif (upperbound >= 17) then
+			local roundWinner = winner()
+			if (roundWinner == "dealer") then
+				dealerWin()
+			elseif (roundWinner == "player") then
+				playerWin()
+			else
+				roundDraw()
+			end
+			resolved = true
+		else
+			local randIndex = math.random(#deck)
+			local dealercard3 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
+			dealercard3.x, dealercard3.y = display.contentCenterX+lastDealerIdx, display.contentCenterY
+			if (lastDealerIdx < 150) then
+				lastDealerIdx = lastDealerIdx+30
+			end
+			table.insert(dealerHand,deck[randIndex])
+			table.remove(deck,randIndex);
+
+			dealerSum.text = "Dealer: "..getHandValue(dealerHand).." pts"
+		end
+	end
+end
+
 function buttonController()
 	-- Calculates if buttons need to be hidden/shown
-	local result = checkPoints()
+	local result = checkPoints(playerHand)
 
 	if (result == "blackjack") then
+		t.text = "BlackJack!"
 		playerDone()
 	elseif (result == "busted") then
+		t.text = "Busted!"
 		hitbutton.isVisible = false
 		standbutton.isVisible = false
 		doublebutton.isVisible = false
