@@ -10,6 +10,12 @@ local composer = require( "composer" )
 local scene = composer.newScene()
 
 --------------------------------------------
+-- Global Variables
+
+local bankVal; -- the players money
+local betVal; -- how much the player is betting
+
+--------------------------------------------
 -- Local Variables
 local background; -- Poker table background
 local roundedRect; -- Status field rectangle
@@ -18,17 +24,16 @@ local dealbutton; -- Deal action button
 local standbutton; -- Stand action button
 local hitbutton; -- Hit action button
 local doublebutton; -- Double action button
+local continuebutton; -- Continue action button
+local gameoverbutton; -- Continue action button
+local playagainbutton; -- Continue action button
 local suits = {"h","d","c","s"}; -- hearts = h,diamonds =d,clubs =c,spades=s
 local deck; -- The deck of Cards
 local playerHand = {}; -- a table to hold the players cards
 local dealerHand = {}; -- a table to hold the dealers cards
 local allCards = {} -- a table to hold all cards
-local betAmount = 0; -- how much the player is betting Total
-local money; -- how much money the player has
-local blackJack = false; -- whether player or dealer has blackjack
-local bet=0; -- how much the player is adding to betAmount variable
-local bankText; -- shows the players money
-local betText; -- shows how much the player is betting
+local bankText; -- displays the players money
+local betText; -- displays how much the player is betting this round
 local playerSum; -- shows the player's points
 local dealerSum; -- shows the dealer's points
 local moved=false; -- if current button has been moved, set to true
@@ -40,7 +45,7 @@ local lastDealerIdx; -- to calculate offset for placing dealer's card
 -- NewGame Setup functions
 
 function Setup()
-	bankText = 10000
+	-- Calling all other setup functions
 	showBackground()
 	showOtherObjects()
 	setupButtons()
@@ -91,12 +96,31 @@ function setupButtons()
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
 	}
 	doublebutton.x, doublebutton.y = display.contentCenterX+120, display.contentCenterY+120
+
+	continuebutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Continue",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	continuebutton.x, continuebutton.y = display.contentCenterX-30, display.contentCenterY+120
+	continuebutton.isVisible = false
+
+	gameoverbutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Game Over",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	gameoverbutton.x, gameoverbutton.y = display.contentCenterX-30, display.contentCenterY+120
+	gameoverbutton.isVisible = false
 end
 
 function setupTextFields()
+
 	-- display player's bet
 	local options = {
-	    text = "Bet Amount: $1000", -- supports up to 11 digits   
+	    text = "Bet Amount: $", -- supports up to 11 digits   
 	    x = 100,
 	    y = 30,
 	    width = 150,
@@ -109,7 +133,7 @@ function setupTextFields()
 
 	-- display player's balance
 	local options = {
-	    text = "Balance: $999999", -- supports up to 11 digits      
+	    text = "Balance: $", -- supports up to 11 digits      
 	    x = display.contentCenterX+20,
 	    y = 30,
 	    width = 150,
@@ -156,6 +180,8 @@ function addListeners()
 	standbutton:addEventListener('touch',stand)
 	hitbutton:addEventListener('touch',hit)
 	doublebutton:addEventListener('touch',double)
+	continuebutton:addEventListener('touch',continue)
+	gameoverbutton:addEventListener('touch',gameOver)
 end
 
 function dealInitial()
@@ -181,19 +207,15 @@ function dealInitial()
 	local dealerback2 = display.newImageRect("back.png", 90, 90 )
 	dealerback2.x, dealerback2.y = display.contentCenterX+90, display.contentCenterY
 
-	local playerPts = getHandValue(playerHand)
-
-	playerSum.text = "Player: "..playerPts.." pts"
+	playerSum.text = "Player: "..getHandValue(playerHand).." pts"
 	dealerSum.text = "Dealer: "..getHandValue(dealerHand).." pts"
 
-	if (string.sub(playerPts,1,2) == "21") then
-		t.text = "BlackJack!"
-		-- resolveDealer()
-	end
+	-- Checks for BlackJack
+	checkPoints()
 
 	-- Offset of where to place cards next
 	lastPlayerIdx = -120
-	lastDealerIdx = 30
+	lastDealerIdx = 90
 end
 
 function stand(event)
@@ -243,6 +265,42 @@ function double(event)
 			t.text = "Double cancelled"
     	else
     		t.text = "Double done"
+    	end
+    end
+    return true
+end
+
+function continue(event)
+	if ( event.phase == "began" ) then
+        t.text = "Reveal Cards?"
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        t.text = ""
+        moved = true
+    else
+    	if ( moved == true ) then
+			t.text = "Continue cancelled"
+    	else
+    		t.text = "Continue done"
+			resolveDealer()
+    	end
+    end
+    return true
+end
+
+function gameOver(event)
+	if ( event.phase == "began" ) then
+        t.text = "Game Over"
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        t.text = ""
+        moved = true
+    else
+    	if ( moved == true ) then
+			t.text = "GO cancelled"
+    	else
+    		t.text = "GO done"
+			-- quit()
     	end
     end
     return true
@@ -298,6 +356,7 @@ function getHandValue(theHand)
 end
 
 function newCardHit()
+	-- Event when player clicks "Hit" button
 	local randIndex = math.random(#deck)
 	local playerCard = display.newImageRect(deck[randIndex]..".png", 90, 90 )
 		playerCard.x, playerCard.y = display.contentCenterX+lastPlayerIdx, display.contentCenterY
@@ -308,11 +367,56 @@ function newCardHit()
 	table.remove(deck,randIndex);
 
 	playerSum.text = "Player: "..getHandValue(playerHand).." pts"
+	buttonController()
+end
+
+function checkPoints()
+	-- Checks for BlackJack or Busted
+	local playerPts = getHandValue(playerHand)
+	local upperbound = tonumber(string.sub(playerPts,1,2))
+
+	if (upperbound == 21) then
+		t.text = "BlackJack!"
+		return "blackjack"
+	elseif (upperbound > 21) then
+		t.text = "Busted!"
+		return "busted"
+	else
+		return "normal"
+	end
+end
+
+function resolveDealer()
+	randIndex = math.random(#deck)
+	local dealercard = display.newImageRect(deck[randIndex]..".png", 90, 90 )
+	dealercard.x, dealercard.y = display.contentCenterX+60, display.contentCenterY
+	table.insert(dealerHand,deck[randIndex])
+	table.remove(deck,randIndex);
+
+	while (tonumber(string.sub(getHandValue(dealerHand),1,2))<17) do
+
+	end
+end
+
+function playerDone()
+	hitbutton.isVisible = false
+	standbutton.isVisible = false
+	doublebutton.isVisible = false
+	continuebutton.isVisible = true
 end
 
 function buttonController()
 	-- Calculates if buttons need to be hidden/shown
+	local result = checkPoints()
 
+	if (result == "blackjack") then
+		playerDone()
+	elseif (result == "busted") then
+		hitbutton.isVisible = false
+		standbutton.isVisible = false
+		doublebutton.isVisible = false
+		gameoverbutton.isVisible = true
+	end
 end
 
 --------------------------------------------
@@ -343,6 +447,14 @@ function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	
+	-- Get params from betpage
+	betVal = event.params.betAmount
+	bankVal = event.params.bankAmount
+
+	-- Update Amount displays
+	betText.text = "Bet Amount: $"..betVal
+	bankText.text = "Bank Amount: $"..bankVal
+	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
 
@@ -351,6 +463,10 @@ function scene:show( event )
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
+
+
+		-- Getting bet/bank values from betpage
+
 	end
 end
 

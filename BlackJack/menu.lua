@@ -19,7 +19,7 @@ local playBtn
 local function onPlayBtnRelease()
 	
 	-- go to bjtable.lua scene
-	composer.gotoScene( "bjtable", "fade", 500 )
+	composer.gotoScene( "betpage", "fade", 500 )
 	
 	return true	-- indicates successful touch
 end
@@ -50,6 +50,7 @@ function scene:create( event )
 	-- create a widget button (which will loads level1.lua on release)
 	playBtn = widget.newButton{
 		label="Play",
+		font = native.systemFontBold, 
 		labelColor = { default={255}, over={128} },
 		default="button.png",
 		over="button-over.png",
@@ -67,6 +68,7 @@ function scene:create( event )
 
 	playBtn2 = widget.newButton{
 		label="Menu",
+	    font = native.systemFontBold, 
 		labelColor = { default={255}, over={128} },
 		default="button.png",
 		over="button-over.png",
