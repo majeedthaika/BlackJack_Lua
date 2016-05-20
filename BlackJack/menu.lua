@@ -18,8 +18,13 @@ local playBtn
 -- 'onRelease' event listener for playBtn
 local function onPlayBtnRelease()
 	
-	-- go to bjtable.lua scene
-	composer.gotoScene( "betpage", "fade", 500 )
+	-- go to betpage.lua scene
+	local options = {
+	effect = "fade",
+	time = 500,
+	params = {bankAmount=1000000, betAmount=0} -- CHANGE THIS
+	}
+	composer.gotoScene( "betpage", options )
 	
 	return true	-- indicates successful touch
 end

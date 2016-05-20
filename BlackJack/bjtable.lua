@@ -25,12 +25,13 @@ local standbutton; -- Stand action button
 local hitbutton; -- Hit action button
 local doublebutton; -- Double action button
 local continuebutton; -- Continue action button
-local gameoverbutton; -- Continue action button
-local playagainbutton; -- Continue action button
+local playagainbutton; -- Play again action button
 local suits = {"h","d","c","s"}; -- hearts = h,diamonds =d,clubs =c,spades=s
 local deck; -- The deck of Cards
 local playerHand = {}; -- a table to hold the players cards
+local playerHandDisplay = {}; -- a table to hold the players cards file
 local dealerHand = {}; -- a table to hold the dealers cards
+local dealerHandDisplay = {}; -- a table to hold the dealers cards file
 local allCards = {} -- a table to hold all cards
 local bankText; -- displays the players money
 local betText; -- displays how much the player is betting this round
@@ -106,14 +107,14 @@ function setupButtons()
 	continuebutton.x, continuebutton.y = display.contentCenterX-30, display.contentCenterY+120
 	continuebutton.isVisible = false
 
-	gameoverbutton = widget.newButton{
+	playagainbutton = widget.newButton{
 		defaultFile = "buttonBlueSmall.png",
 		overFile = "buttonBlueSmallOver.png",
-		label = "Game Over",
+		label = "Play Again",
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
 	}
-	gameoverbutton.x, gameoverbutton.y = display.contentCenterX-30, display.contentCenterY+120
-	gameoverbutton.isVisible = false
+	playagainbutton.x, playagainbutton.y = display.contentCenterX-30, display.contentCenterY+120
+	playagainbutton.isVisible = false
 end
 
 function setupTextFields()
@@ -133,7 +134,7 @@ function setupTextFields()
 
 	-- display player's balance
 	local options = {
-	    text = "Balance: $", -- supports up to 11 digits      
+	    text = "Bank Amount: $", -- supports up to 11 digits      
 	    x = display.contentCenterX+20,
 	    y = 30,
 	    width = 150,
@@ -181,31 +182,31 @@ function addListeners()
 	hitbutton:addEventListener('touch',hit)
 	doublebutton:addEventListener('touch',double)
 	continuebutton:addEventListener('touch',continue)
-	gameoverbutton:addEventListener('touch',gameOver)
+	playagainbutton:addEventListener('touch',playagain)
 end
 
 function dealInitial()
 	-- Deal out starting player+dealer card
 	local randIndex = math.random(#deck)
-	local playerCard1 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-	playerCard1.x, playerCard1.y = display.contentCenterX-180, display.contentCenterY
+	table.insert(playerHandDisplay, display.newImageRect(deck[randIndex]..".png", 90, 90 ))
+	playerHandDisplay[1].x, playerHandDisplay[1].y = display.contentCenterX-180, display.contentCenterY
 	table.insert(playerHand,deck[randIndex])
 	table.remove(deck,randIndex);
 	
 	randIndex = math.random(#deck)
-	local playerCard2 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-	playerCard2.x, playerCard2.y = display.contentCenterX-150, display.contentCenterY
+	table.insert(playerHandDisplay, display.newImageRect(deck[randIndex]..".png", 90, 90 ))
+	playerHandDisplay[2].x, playerHandDisplay[2].y = display.contentCenterX-150, display.contentCenterY
 	table.insert(playerHand,deck[randIndex])
 	table.remove(deck,randIndex);
 
 	randIndex = math.random(#deck)
-	local dealercard1 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-	dealercard1.x, dealercard1.y = display.contentCenterX+60, display.contentCenterY
+	table.insert(dealerHandDisplay, display.newImageRect(deck[randIndex]..".png", 90, 90 ))
+	dealerHandDisplay[1].x, dealerHandDisplay[1].y = display.contentCenterX+60, display.contentCenterY
 	table.insert(dealerHand,deck[randIndex])
 	table.remove(deck,randIndex);
 
-	local dealerback2 = display.newImageRect("back.png", 90, 90 )
-	dealerback2.x, dealerback2.y = display.contentCenterX+90, display.contentCenterY
+	table.insert(dealerHandDisplay, display.newImageRect("back.png", 90, 90 ))
+	dealerHandDisplay[2].x, dealerHandDisplay[2].y = display.contentCenterX+90, display.contentCenterY
 
 	playerSum.text = "Player: "..getHandValue(playerHand).." pts"
 	dealerSum.text = "Dealer: "..getHandValue(dealerHand).." pts"
@@ -259,7 +260,14 @@ function double(event)
         moved = true
     else
     	if ( moved == false ) then
-    		t.text = "Double done"
+    		t.text = "Doubled!"
+    		bankVal = bankVal - betVal
+    		betVal = betVal + betVal
+
+    		betText.text = "Bet Amount: $"..betVal
+			bankText.text = "Bank Amount: $"..bankVal
+			doublebutton.isVisible = false
+    		newCardHit()
     	end
     end
     return true
@@ -281,19 +289,22 @@ function continue(event)
     return true
 end
 
-function gameOver(event)
+function playagain(event)
 	if ( event.phase == "began" ) then
-        t.text = "Game Over"
+        t.text = "Play New Game?"
         moved = false
     elseif ( event.phase == "moved" ) then
         t.text = ""
         moved = true
     else
-    	if ( moved == true ) then
-			t.text = "GO cancelled"
-    	else
-    		t.text = "GO done"
-			-- quit()
+    	if ( moved == false ) then
+    		-- go to betpage.lua scene
+			local options = {
+			effect = "fade",
+			time = 500,
+			params = {bankAmount=bankVal}
+			}
+			composer.gotoScene( "betpage", options )
     	end
     end
     return true
@@ -351,8 +362,8 @@ end
 function newCardHit()
 	-- Event when player clicks "Hit" button
 	local randIndex = math.random(#deck)
-	local playerCard = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-		playerCard.x, playerCard.y = display.contentCenterX+lastPlayerIdx, display.contentCenterY
+	table.insert(playerHandDisplay, display.newImageRect(deck[randIndex]..".png", 90, 90 ))
+	playerHandDisplay[#playerHandDisplay].x, playerHandDisplay[#playerHandDisplay].y = display.contentCenterX+lastPlayerIdx, display.contentCenterY
 	if (lastPlayerIdx < -60) then
 		lastPlayerIdx = lastPlayerIdx+30
 	end
@@ -398,19 +409,18 @@ function playerDone()
 	continuebutton.isVisible = true
 end
 
-function playerWin()
-	t.text = "Player Win"
+function calculateWinner(roundWinner)
+	if (roundWinner == "dealer") then
+		t.text = "Dealer Win"
+	elseif (roundWinner == "player") then
+		t.text = "Player Win"
+		bankVal = bankVal + (2*betVal)
+	else
+		t.text = "Draw"
+		bankVal = bankVal + betVal
+	end
 	continuebutton.isVisible = false
-end
-
-function dealerWin()
-	t.text = "Dealer Win"
-	continuebutton.isVisible = false
-end
-
-function roundDraw()
-	t.text = "Draw"
-	continuebutton.isVisible = false
+	playagainbutton.isVisible = true
 end
 
 function resolveDealer()
@@ -418,22 +428,15 @@ function resolveDealer()
 	while ( resolved == false ) do
 		local upperbound = tonumber(string.sub(getHandValue(dealerHand),1,2))
 		if (upperbound > 21) then
-			playerWin()
+			calculateWinner("player")
 			resolved = true
 		elseif (upperbound >= 17) then
-			local roundWinner = winner()
-			if (roundWinner == "dealer") then
-				dealerWin()
-			elseif (roundWinner == "player") then
-				playerWin()
-			else
-				roundDraw()
-			end
+			calculateWinner( winner() )
 			resolved = true
 		else
 			local randIndex = math.random(#deck)
-			local dealercard3 = display.newImageRect(deck[randIndex]..".png", 90, 90 )
-			dealercard3.x, dealercard3.y = display.contentCenterX+lastDealerIdx, display.contentCenterY
+			table.insert(dealerHandDisplay, display.newImageRect(deck[randIndex]..".png", 90, 90 ))
+			dealerHandDisplay[#dealerHandDisplay].x, dealerHandDisplay[#dealerHandDisplay].y = display.contentCenterX+lastDealerIdx, display.contentCenterY
 			if (lastDealerIdx < 150) then
 				lastDealerIdx = lastDealerIdx+30
 			end
@@ -457,7 +460,7 @@ function buttonController()
 		hitbutton.isVisible = false
 		standbutton.isVisible = false
 		doublebutton.isVisible = false
-		gameoverbutton.isVisible = true
+		playagainbutton.isVisible = true
 	end
 end
 
@@ -479,8 +482,12 @@ function scene:create( event )
 	sceneGroup:insert( hitbutton )
 	sceneGroup:insert( standbutton )
 	sceneGroup:insert( doublebutton )
+	sceneGroup:insert( continuebutton )
+	sceneGroup:insert( playagainbutton )
 	sceneGroup:insert( betText )
 	sceneGroup:insert( bankText )
+	sceneGroup:insert( playerSum )
+	sceneGroup:insert( dealerSum )
 	sceneGroup:insert( t )
 end
 
@@ -496,6 +503,8 @@ function scene:show( event )
 	-- Update Amount displays
 	betText.text = "Bet Amount: $"..betVal
 	bankText.text = "Bank Amount: $"..bankVal
+
+	composer.removeScene( "betpage" )
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
@@ -516,6 +525,14 @@ function scene:hide( event )
 	local sceneGroup = self.view
 	
 	local phase = event.phase
+
+	for i=1,#playerHandDisplay do
+		sceneGroup:insert( playerHandDisplay[i] )
+	end
+
+	for i=1,#dealerHandDisplay do
+		sceneGroup:insert( dealerHandDisplay[i] )
+	end
 	
 	if event.phase == "will" then
 		-- Called when the scene is on screen and is about to move off screen

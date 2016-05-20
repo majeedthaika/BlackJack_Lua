@@ -11,8 +11,8 @@ local scene = composer.newScene()
 
 --------------------------------------------
 -- Global Variables
-bankAmount = 100000; -- the players money (TEST VAL! CHANGEME)
-betAmount = 0; -- how much the player is betting
+local bankAmount = 100000; -- the players money (TEST VAL! CHANGEME)
+local betAmount; -- how much the player is betting
 
 --------------------------------------------
 
@@ -20,6 +20,7 @@ betAmount = 0; -- how much the player is betting
 local playBtn -- Play now button
 local pickerWheel -- Drop down menu
 local values -- Value of the picker wheel
+local bankText -- Text displaying bank balance
 local betLimits={ 1,3,10,30,100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000 }
 
 -- 'onRelease' event listener for playBtn
@@ -127,10 +128,23 @@ function scene:create( event )
 	}
 	playBtn.x, playBtn.y = display.contentCenterX, display.contentCenterY+135
 
+	local options = {
+	    text = "Balance: $", -- supports up to 11 digits      
+	    x = 100,
+	    y = 30,
+	    width = 150,
+	    font = native.systemFontBold,   
+	    fontSize = 18,
+	    align = "left"  --new alignment parameter
+	}
+	bankText = display.newText(options);
+    bankText:setTextColor(0,0,0)
+
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
 	sceneGroup:insert( playBtn )
 	sceneGroup:insert( betText )
+	sceneGroup:insert( bankText )
 	sceneGroup:insert( pickerWheel )
 end
 
@@ -138,9 +152,16 @@ function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	
+
+	-- Get params from other scenes
 	if phase == "will" then
+		bankAmount = event.params.bankAmount
+
+		bankText.text = "Balance: $"..bankAmount
 		-- Called when the scene is still off screen and is about to move on screen
 	elseif phase == "did" then
+
+		composer.removeScene( "bjtable" )
 		-- Called when the scene is now on screen
 		-- 
 		-- INSERT code here to make the scene come alive
