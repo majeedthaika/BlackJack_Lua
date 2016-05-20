@@ -22,7 +22,6 @@ local menupagebutton; -- Menu page action button
 local pickerWheel -- Drop down menu
 local values -- Value of the picker wheel
 local bankText -- Text displaying bank balance
-local moved=false; -- if current button has been moved, set to true
 local betLimits={ 1,3,10,30,100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000 }
 
 function playnow(event)
@@ -58,20 +57,14 @@ function playnow(event)
 end
 
 function menupage(event)
-	if ( event.phase == "began" ) then
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        moved = true
-    else
-    	if ( moved == false ) then
-    		-- go to menu.lua scene
-			local options = {
-			effect = "fade",
-			time = 500,
-			params = {bankAmount=bankVal}
-			}
-			composer.gotoScene( "menu", options )
-    	end
+	if ( event.phase ~= "began" ) then
+		-- go to menu.lua scene
+		local options = {
+		effect = "fade",
+		time = 500,
+		params = {bankAmount=bankVal}
+		}
+		composer.gotoScene( "menu", options )
     end
     return true
 end

@@ -38,7 +38,6 @@ local bankText; -- displays the players money
 local betText; -- displays how much the player is betting this round
 local playerSum; -- shows the player's points
 local dealerSum; -- shows the dealer's points
-local moved=false; -- if current button has been moved, set to true
 local lastPlayerIdx; -- to calculate offset for placing player's card
 local lastDealerIdx; -- to calculate offset for placing dealer's card
 
@@ -221,15 +220,8 @@ end
 function stand(event)
 	if ( event.phase == "began" ) then
         t.text = "Happy with your points?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Stand done"
-			playerDone()
-    	end
+    	playerDone()
     end
     return true
 end
@@ -237,15 +229,8 @@ end
 function hit(event)
 	if ( event.phase == "began" ) then
         t.text = "Hit me baby one more time!"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Hit done"
-    		newCardHit()
-    	end
+    	newCardHit()
     end
     return true
 end
@@ -253,21 +238,14 @@ end
 function double(event)
 	if ( event.phase == "began" ) then
         t.text = "Double or nothing?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Doubled!"
-    		bankVal = bankVal - betVal
-    		betVal = betVal + betVal
+		bankVal = bankVal - betVal
+		betVal = betVal + betVal
 
-    		betText.text = "Bet Amount: $"..betVal
-			bankText.text = "Bank Amount: $"..bankVal
-			doublebutton.isVisible = false
-    		newCardHit()
-    	end
+		betText.text = "Bet Amount: $"..betVal
+		bankText.text = "Bank Amount: $"..bankVal
+		doublebutton.isVisible = false
+		newCardHit()
     end
     return true
 end
@@ -275,15 +253,8 @@ end
 function continue(event)
 	if ( event.phase == "began" ) then
         t.text = "Reveal Cards?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Continue done"
-			resolveDealer()
-    	end
+    	resolveDealer()
     end
     return true
 end
@@ -291,20 +262,14 @@ end
 function playagain(event)
 	if ( event.phase == "began" ) then
         t.text = "Play New Game?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		-- go to betpage.lua scene
-			local options = {
-			effect = "fade",
-			time = 500,
-			params = {bankAmount=bankVal}
-			}
-			composer.gotoScene( "betpage", options )
-    	end
+		-- go to betpage.lua scene
+		local options = {
+		effect = "fade",
+		time = 500,
+		params = {bankAmount=bankVal}
+		}
+		composer.gotoScene( "betpage", options )
     end
     return true
 end
@@ -312,20 +277,14 @@ end
 function menupage(event)
 	if ( event.phase == "began" ) then
         t.text = "Go back to Main Menu?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		-- go to menu.lua scene
-			local options = {
-			effect = "fade",
-			time = 500,
-			params = {bankAmount=bankVal}
-			}
-			composer.gotoScene( "menu", options )
-    	end
+		-- go to menu.lua scene
+		local options = {
+		effect = "fade",
+		time = 500,
+		params = {bankAmount=bankVal}
+		}
+		composer.gotoScene( "menu", options )
     end
     return true
 end
