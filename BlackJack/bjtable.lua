@@ -76,54 +76,42 @@ end
 function setupButtons()
 	-- display action buttons
 	standbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Stand",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Stand.png",
+		overFile = "StandOver.png",
 	}
-	standbutton.x, standbutton.y = display.contentCenterX-180, display.contentCenterY+120
+	standbutton.x, standbutton.y = display.contentCenterX-140, display.contentCenterY+120
 
 	hitbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Hit",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Hit.png",
+		overFile = "HitOver.png",
 	}
 	hitbutton.x, hitbutton.y = display.contentCenterX-30, display.contentCenterY+120
 
 	doublebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Double",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Double.png",
+		overFile = "DoubleOver.png",
 	}
-	doublebutton.x, doublebutton.y = display.contentCenterX+120, display.contentCenterY+120
+	doublebutton.x, doublebutton.y = display.contentCenterX+80, display.contentCenterY+120
 
 	continuebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Continue",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Continue.png",
+		overFile = "ContinueOver.png",
 	}
 	continuebutton.x, continuebutton.y = display.contentCenterX-30, display.contentCenterY+120
 	continuebutton.isVisible = false
 
 	playagainbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Play Again",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "PlayAgain.png",
+		overFile = "PlayAgainOver.png",
 	}
-	playagainbutton.x, playagainbutton.y = display.contentCenterX-90, display.contentCenterY+120
+	playagainbutton.x, playagainbutton.y = display.contentCenterX-110, display.contentCenterY+120
 	playagainbutton.isVisible = false
 
 	menupagebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Main Menu",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "MainMenu.png",
+		overFile = "MainMenuOver.png",
 	}
-	menupagebutton.x, menupagebutton.y = display.contentCenterX+60, display.contentCenterY+120
+	menupagebutton.x, menupagebutton.y = display.contentCenterX+50, display.contentCenterY+120
 	menupagebutton.isVisible = false
 end
 

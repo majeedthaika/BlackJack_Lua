@@ -159,20 +159,16 @@ function scene:create( event )
     bankText:setTextColor(0,0,0)
 
 	playnowbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Play Now",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "PlayNow.png",
+		overFile = "PlayNowOver.png",
 	}
 	playnowbutton.x, playnowbutton.y = display.contentCenterX-80, display.contentCenterY+135
 
 	menupagebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Main Menu",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "MainMenu.png",
+		overFile = "MainMenuOver.png",
 	}
-	menupagebutton.x, menupagebutton.y = display.contentCenterX+85, display.contentCenterY+135
+	menupagebutton.x, menupagebutton.y = display.contentCenterX+75, display.contentCenterY+135
 
 	-- for all button touch events
 	playnowbutton:addEventListener('touch',playnow)
