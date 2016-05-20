@@ -13,20 +13,25 @@ local widget = require "widget"
 --------------------------------------------
 
 -- forward declarations and other locals
-local playBtn
+-- None
 
--- 'onRelease' event listener for playBtn
-local function onPlayBtnRelease()
-	
-	-- go to betpage.lua scene
-	local options = {
-	effect = "fade",
-	time = 500,
-	params = {bankAmount=1000000, betAmount=0} -- CHANGE THIS
-	}
-	composer.gotoScene( "betpage", options )
-	
-	return true	-- indicates successful touch
+function gotobetpage(event)
+	if ( event.phase == "began" ) then
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        moved = true
+    else
+    	if ( moved == false ) then
+    		-- go to betpage.lua scene
+			local options = {
+			effect = "fade",
+			time = 500,
+			params = {bankAmount=1000000, betAmount=0} -- CHANGE THIS
+			}
+			composer.gotoScene( "betpage", options )
+    	end
+    end
+    return true
 end
 
 function scene:create( event )
@@ -41,57 +46,25 @@ function scene:create( event )
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
 
 	-- display a background image
-	local background = display.newImageRect( "background.jpg", display.contentWidth, display.contentHeight )
+	local background = display.newImageRect( "BJHomeOutline.png", display.contentWidth, display.contentHeight )
 	background.anchorX = 0
 	background.anchorY = 0
-	background.x, background.y = 0, 0
+	background.x, background.y = -5, 15
 	
 	-- create/position logo/title image on upper-half of the screen
 	-- local titleLogo = display.newImageRect( "logo.png", 264, 42 )
 	-- titleLogo.x = display.contentWidth * 0.5
 	-- titleLogo.y = 100
 	
-	local roundedRect1 = display.newRoundedRect( 20, 50, 100, 40, 8 )
-	roundedRect1.x, roundedRect1.y = 70, 70 	-- simulate TopLeft alignment
-	roundedRect1:setFillColor( 122/255, 255/255, 255/255, 122/255 )
-
-	-- create a widget button (which will loads level1.lua on release)
-	playBtn = widget.newButton{
-		label="Play",
-		font = native.systemFontBold, 
-		labelColor = { default={255}, over={128} },
-		default="button.png",
-		over="button-over.png",
-		emboss = true,
-		width=100, height=40,
-		onRelease = onPlayBtnRelease	-- event listener function
-	}
-	playBtn.x = 70
-	playBtn.y = 70
-
-		
-	local roundedRect2 = display.newRoundedRect( 20, 50, 100, 40, 8 )
-	roundedRect2.x, roundedRect2.y = display.contentWidth-70, 70 	-- simulate TopLeft alignment
-	roundedRect2:setFillColor( 255/255, 122/255, 255/255, 122/255 )
-
-	playBtn2 = widget.newButton{
-		label="Menu",
-	    font = native.systemFontBold, 
-		labelColor = { default={255}, over={128} },
-		default="button.png",
-		over="button-over.png",
-		width=100, height=40,
-	}
-	playBtn2.x = display.contentWidth-70
-	playBtn2.y = 70
+	local roundedRect1 = display.newRoundedRect( 409, 96, 111, 55, 15 )
+	roundedRect1:setFillColor( 255/255, 255/255, 255/255, 0/255 )
+	roundedRect1.isHitTestable = true
 	
 	-- all display objects must be inserted into group
+	roundedRect1:addEventListener('touch',gotobetpage)
+	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
-	-- sceneGroup:insert( titleLogo )
 	sceneGroup:insert( roundedRect1 )
-	sceneGroup:insert( roundedRect2 )
-	sceneGroup:insert( playBtn )
-	sceneGroup:insert( playBtn2 )
 end
 
 function scene:show( event )
@@ -130,10 +103,6 @@ function scene:destroy( event )
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
 	
-	if playBtn then
-		playBtn:removeSelf()	-- widgets must be manually removed
-		playBtn = nil
-	end
 end
 
 ---------------------------------------------------------------------------------
