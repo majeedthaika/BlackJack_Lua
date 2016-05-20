@@ -26,6 +26,7 @@ local hitbutton; -- Hit action button
 local doublebutton; -- Double action button
 local continuebutton; -- Continue action button
 local playagainbutton; -- Play again action button
+local menupagebutton; -- Play again action button
 local suits = {"h","d","c","s"}; -- hearts = h,diamonds =d,clubs =c,spades=s
 local deck; -- The deck of Cards
 local playerHand = {}; -- a table to hold the players cards
@@ -113,8 +114,17 @@ function setupButtons()
 		label = "Play Again",
 		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
 	}
-	playagainbutton.x, playagainbutton.y = display.contentCenterX-30, display.contentCenterY+120
+	playagainbutton.x, playagainbutton.y = display.contentCenterX-90, display.contentCenterY+120
 	playagainbutton.isVisible = false
+
+	menupagebutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Main Menu",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	menupagebutton.x, menupagebutton.y = display.contentCenterX+60, display.contentCenterY+120
+	menupagebutton.isVisible = false
 end
 
 function setupTextFields()
@@ -183,6 +193,7 @@ function addListeners()
 	doublebutton:addEventListener('touch',double)
 	continuebutton:addEventListener('touch',continue)
 	playagainbutton:addEventListener('touch',playagain)
+	menupagebutton:addEventListener('touch',menupage)
 end
 
 function dealInitial()
@@ -310,6 +321,27 @@ function playagain(event)
     return true
 end
 
+function menupage(event)
+	if ( event.phase == "began" ) then
+        t.text = "Go back to Main Menu?"
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        t.text = ""
+        moved = true
+    else
+    	if ( moved == false ) then
+    		-- go to menu.lua scene
+			local options = {
+			effect = "fade",
+			time = 500,
+			params = {bankAmount=bankVal}
+			}
+			composer.gotoScene( "menu", options )
+    	end
+    end
+    return true
+end
+
 function createDeck()
 	--Create deck + name it according to card images
 	deck = {};
@@ -421,6 +453,7 @@ function calculateWinner(roundWinner)
 	end
 	continuebutton.isVisible = false
 	playagainbutton.isVisible = true
+	menupagebutton.isVisible = true
 end
 
 function resolveDealer()
@@ -461,6 +494,7 @@ function buttonController()
 		standbutton.isVisible = false
 		doublebutton.isVisible = false
 		playagainbutton.isVisible = true
+		menupagebutton.isVisible = true
 	end
 end
 
@@ -484,6 +518,7 @@ function scene:create( event )
 	sceneGroup:insert( doublebutton )
 	sceneGroup:insert( continuebutton )
 	sceneGroup:insert( playagainbutton )
+	sceneGroup:insert( menupagebutton )
 	sceneGroup:insert( betText )
 	sceneGroup:insert( bankText )
 	sceneGroup:insert( playerSum )
