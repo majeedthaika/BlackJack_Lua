@@ -17,37 +17,64 @@ local betAmount; -- how much the player is betting
 --------------------------------------------
 
 -- forward declarations and other locals
-local playBtn -- Play now button
+local playnowbutton; -- Play now action button
+local menupagebutton; -- Menu page action button
 local pickerWheel -- Drop down menu
 local values -- Value of the picker wheel
 local bankText -- Text displaying bank balance
+local moved=false; -- if current button has been moved, set to true
 local betLimits={ 1,3,10,30,100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000 }
 
--- 'onRelease' event listener for playBtn
-local function onPlayBtnRelease()
-	-- Get the table of current values for all columns
-	values = pickerWheel:getValues()
+function playnow(event)
+	if ( event.phase == "began" ) then
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        moved = true
+    else
+    	if ( moved == false ) then
+    		-- Get the table of current values for all columns
+    		values = pickerWheel:getValues()
 
-	-- Get the value for each column in the wheel (by column index)
-	local betAmount = values[1].value
+    		-- Get the value for each column in the wheel (by column index)
+    		local betAmount = values[1].value
 	
-	if ((betAmount*2) <= bankAmount) then
-		bankAmount = bankAmount - betAmount
-		-- go to bjtable.lua scene
-		local options = {
-		effect = "fade",
-		time = 500,
-		params = {bankAmount=bankAmount,  betAmount=betAmount}
-		}
-		composer.gotoScene( "bjtable", options )
-	else
-		betText.text = "Invalid, Try again:"
-	    betText.fontSize = 30
-	    betText:setTextColor(1,0.2,0.2)
-	end
-	return true	-- indicates successful touch
+			if ((betAmount*2) <= bankAmount) then
+				bankAmount = bankAmount - betAmount
+				-- go to bjtable.lua scene
+				local options = {
+				effect = "fade",
+				time = 500,
+				params = {bankAmount=bankAmount,  betAmount=betAmount}
+				}
+				composer.gotoScene( "bjtable", options )
+			else
+				betText.text = "Invalid, Try again:"
+			    betText.fontSize = 30
+			    betText:setTextColor(1,0.2,0.2)
+			end
+    	end
+    end
+    return true
 end
 
+function menupage(event)
+	if ( event.phase == "began" ) then
+        moved = false
+    elseif ( event.phase == "moved" ) then
+        moved = true
+    else
+    	if ( moved == false ) then
+    		-- go to menu.lua scene
+			local options = {
+			effect = "fade",
+			time = 500,
+			params = {bankAmount=bankVal}
+			}
+			composer.gotoScene( "menu", options )
+    	end
+    end
+    return true
+end
 
 function scene:create( event )
 	local sceneGroup = self.view
@@ -119,15 +146,6 @@ function scene:create( event )
 	)
 	pickerWheel.x, pickerWheel.y = display.contentCenterX, display.contentCenterY
 
-	playBtn = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Play Now!",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-		onRelease = onPlayBtnRelease
-	}
-	playBtn.x, playBtn.y = display.contentCenterX, display.contentCenterY+135
-
 	local options = {
 	    text = "Balance: $", -- supports up to 11 digits      
 	    x = 100,
@@ -140,9 +158,30 @@ function scene:create( event )
 	bankText = display.newText(options);
     bankText:setTextColor(0,0,0)
 
+	playnowbutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Play Now",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	playnowbutton.x, playnowbutton.y = display.contentCenterX-80, display.contentCenterY+135
+
+	menupagebutton = widget.newButton{
+		defaultFile = "buttonBlueSmall.png",
+		overFile = "buttonBlueSmallOver.png",
+		label = "Main Menu",
+		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+	}
+	menupagebutton.x, menupagebutton.y = display.contentCenterX+85, display.contentCenterY+135
+
+	-- for all button touch events
+	playnowbutton:addEventListener('touch',playnow)
+	menupagebutton:addEventListener('touch',menupage)
+
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
-	sceneGroup:insert( playBtn )
+	sceneGroup:insert( playnowbutton )
+	sceneGroup:insert( menupagebutton )
 	sceneGroup:insert( betText )
 	sceneGroup:insert( bankText )
 	sceneGroup:insert( pickerWheel )
@@ -190,11 +229,6 @@ function scene:destroy( event )
 	-- 
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
-	
-	if playBtn then
-		playBtn:removeSelf()	-- widgets must be manually removed
-		playBtn = nil
-	end
 end
 
 ---------------------------------------------------------------------------------

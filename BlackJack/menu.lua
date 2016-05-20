@@ -32,6 +32,9 @@ end
 function scene:create( event )
 	local sceneGroup = self.view
 
+	composer.removeScene( "betpage" )
+	composer.removeScene( "bjtable" )
+
 	-- Called when the scene's view does not exist.
 	-- 
 	-- INSERT code here to initialize the scene
@@ -78,7 +81,6 @@ function scene:create( event )
 		default="button.png",
 		over="button-over.png",
 		width=100, height=40,
-		onRelease = onPlayBtnRelease	-- event listener function
 	}
 	playBtn2.x = display.contentWidth-70
 	playBtn2.y = 70
