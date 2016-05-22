@@ -38,7 +38,6 @@ local bankText; -- displays the players money
 local betText; -- displays how much the player is betting this round
 local playerSum; -- shows the player's points
 local dealerSum; -- shows the dealer's points
-local moved=false; -- if current button has been moved, set to true
 local lastPlayerIdx; -- to calculate offset for placing player's card
 local lastDealerIdx; -- to calculate offset for placing dealer's card
 
@@ -76,54 +75,42 @@ end
 function setupButtons()
 	-- display action buttons
 	standbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Stand",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Stand.png",
+		overFile = "StandOver.png",
 	}
-	standbutton.x, standbutton.y = display.contentCenterX-180, display.contentCenterY+120
+	standbutton.x, standbutton.y = display.contentCenterX-140, display.contentCenterY+120
 
 	hitbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Hit",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Hit.png",
+		overFile = "HitOver.png",
 	}
 	hitbutton.x, hitbutton.y = display.contentCenterX-30, display.contentCenterY+120
 
 	doublebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Double",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Double.png",
+		overFile = "DoubleOver.png",
 	}
-	doublebutton.x, doublebutton.y = display.contentCenterX+120, display.contentCenterY+120
+	doublebutton.x, doublebutton.y = display.contentCenterX+80, display.contentCenterY+120
 
 	continuebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Continue",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "Continue.png",
+		overFile = "ContinueOver.png",
 	}
 	continuebutton.x, continuebutton.y = display.contentCenterX-30, display.contentCenterY+120
 	continuebutton.isVisible = false
 
 	playagainbutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Play Again",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "PlayAgain.png",
+		overFile = "PlayAgainOver.png",
 	}
-	playagainbutton.x, playagainbutton.y = display.contentCenterX-90, display.contentCenterY+120
+	playagainbutton.x, playagainbutton.y = display.contentCenterX-110, display.contentCenterY+120
 	playagainbutton.isVisible = false
 
 	menupagebutton = widget.newButton{
-		defaultFile = "buttonBlueSmall.png",
-		overFile = "buttonBlueSmallOver.png",
-		label = "Main Menu",
-		labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+		defaultFile = "MainMenu.png",
+		overFile = "MainMenuOver.png",
 	}
-	menupagebutton.x, menupagebutton.y = display.contentCenterX+60, display.contentCenterY+120
+	menupagebutton.x, menupagebutton.y = display.contentCenterX+50, display.contentCenterY+120
 	menupagebutton.isVisible = false
 end
 
@@ -233,15 +220,8 @@ end
 function stand(event)
 	if ( event.phase == "began" ) then
         t.text = "Happy with your points?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Stand done"
-			playerDone()
-    	end
+    	playerDone()
     end
     return true
 end
@@ -249,15 +229,8 @@ end
 function hit(event)
 	if ( event.phase == "began" ) then
         t.text = "Hit me baby one more time!"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Hit done"
-    		newCardHit()
-    	end
+    	newCardHit()
     end
     return true
 end
@@ -265,21 +238,14 @@ end
 function double(event)
 	if ( event.phase == "began" ) then
         t.text = "Double or nothing?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Doubled!"
-    		bankVal = bankVal - betVal
-    		betVal = betVal + betVal
+		bankVal = bankVal - betVal
+		betVal = betVal + betVal
 
-    		betText.text = "Bet Amount: $"..betVal
-			bankText.text = "Bank Amount: $"..bankVal
-			doublebutton.isVisible = false
-    		newCardHit()
-    	end
+		betText.text = "Bet Amount: $"..betVal
+		bankText.text = "Bank Amount: $"..bankVal
+		doublebutton.isVisible = false
+		newCardHit()
     end
     return true
 end
@@ -287,15 +253,8 @@ end
 function continue(event)
 	if ( event.phase == "began" ) then
         t.text = "Reveal Cards?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		t.text = "Continue done"
-			resolveDealer()
-    	end
+    	resolveDealer()
     end
     return true
 end
@@ -303,20 +262,14 @@ end
 function playagain(event)
 	if ( event.phase == "began" ) then
         t.text = "Play New Game?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		-- go to betpage.lua scene
-			local options = {
-			effect = "fade",
-			time = 500,
-			params = {bankAmount=bankVal}
-			}
-			composer.gotoScene( "betpage", options )
-    	end
+		-- go to betpage.lua scene
+		local options = {
+		effect = "fade",
+		time = 500,
+		params = {bankAmount=bankVal}
+		}
+		composer.gotoScene( "betpage", options )
     end
     return true
 end
@@ -324,20 +277,14 @@ end
 function menupage(event)
 	if ( event.phase == "began" ) then
         t.text = "Go back to Main Menu?"
-        moved = false
-    elseif ( event.phase == "moved" ) then
-        t.text = ""
-        moved = true
     else
-    	if ( moved == false ) then
-    		-- go to menu.lua scene
-			local options = {
-			effect = "fade",
-			time = 500,
-			params = {bankAmount=bankVal}
-			}
-			composer.gotoScene( "menu", options )
-    	end
+		-- go to menu.lua scene
+		local options = {
+		effect = "fade",
+		time = 500,
+		params = {bankAmount=bankVal}
+		}
+		composer.gotoScene( "menu", options )
     end
     return true
 end
